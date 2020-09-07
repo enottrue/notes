@@ -1,0 +1,81 @@
+<?php
+// define('APP_ID', 'local.5b2a1a981dcc61.33697219'); // take it from Bitrix24 after adding a new application
+// define('APP_SECRET_CODE', '66By5z80FE0pxLvVh8Y1wsl3JHo7weBe5H2Srvnnwu7qoIVrYF'); // take it from Bitrix24 after adding a new application
+// define('APP_REG_URL', 'https://www.site-protect.ru/sistemnyie-nastrojki/gshnshgnshgn'); // the same URL you should set when adding a new application in Bitrix24
+
+
+
+if(isset($_FILES['file']) and !empty($_FILES['file'])){
+    $file_path = 'https://www.site-protect.ru/files/' . $modx->runSnippet('vi_file_upload',array('file' => $_FILES['file']));
+} else {
+    $file_path = '';
+}
+
+$setting = $modx->getObject('modSystemSetting', 'setting_manager');
+    if ($setting) {
+    // echo $setting->get('value');
+    if ($setting->get('value')==1029)  {
+    $manager=1029;
+    $setting->set('value', $manager);
+    $setting->save();
+    }
+    else {
+    $manager=1029;
+    $setting->set('value', $manager);
+    $setting->save();   
+    }
+    }
+$queryUrl = 'https://site-protect.bitrix24.ru/rest/9/APIKEY/crm.lead.add.json';
+$queryData = http_build_query(array(
+    'fields' => array(
+	"TITLE" => 'Услуги/Узнать сроки и стоимость',
+	"NAME" => $hook->getValue('name'),
+	"SOURCE_ID" => 'Информация', 
+	"LAST_NAME" => '',
+	"STATUS_ID" => "NEW",
+	"OPENED" => "Y",
+	"ASSIGNED_BY_ID" => $manager,
+	"COMMENTS" => $hook->getValue('to_master'),
+	"PHONE" => array(array("VALUE" => $hook->getValue('tel'), "VALUE_TYPE" => "WORK" )),
+	"EMAIL" => array(array("VALUE" => $email = $hook->getValue('email'), "VALUE_TYPE" => "WORK" )),
+	"UF_CRM_1590676502" => $file_path,
+	"UF_CRM_1590676896" => $hook->getValue('site'),
+	"WEB" => array(array("VALUE" => 'site-protect.ru', "VALUE_TYPE" => "WORK" )),
+    "UTM_SOURCE" => $hook->getValue('utm_source'),
+    "UTM_MEDIUM" => $hook->getValue('utm_medium'),
+    "UTM_CAMPAIGN" => $hook->getValue('utm_campaign'),
+    "UTM_CONTENT" => $hook->getValue('utm_content'),
+    "UTM_TERM" => $hook->getValue('utm_term'),
+    ),
+    'params' => array("REGISTER_SONET_EVENT" => "Y")
+));
+$curl = curl_init();
+curl_setopt_array($curl, array(
+  CURLOPT_SSL_VERIFYPEER => 0,
+  CURLOPT_POST => 1,
+  CURLOPT_HEADER => 0,
+  CURLOPT_RETURNTRANSFER => 1,
+  CURLOPT_URL => $queryUrl,
+  CURLOPT_POSTFIELDS => $queryData,
+));
+$result = curl_exec($curl);
+curl_close($curl);
+$result = json_decode($result, 1);
+
+if (array_key_exists('error', $result)) {
+echo "Error saving lead: ".$result['error_description']."<br/>";
+/*Активируем почтовый сервис MODX*/
+$modx->getService('mail', 'mail.modPHPMailer');
+$modx->mail->set(modMail::MAIL_FROM, $modx->getOption('emailsender'));
+$modx->mail->set(modMail::MAIL_FROM_NAME, $modx->getOption('site_name'));
+/*Адрес получателя нашего письма*/
+$modx->mail->address('to', 'sergey@site-protect.ru');
+/*Заголовок сообщения*/
+$modx->mail->set(modMail::MAIL_SUBJECT, 'Ошибка отправки лида по api');
+/*Подставляем чанк с телом письма (предварительно его нужно создать)*/
+$modx->mail->set(modMail::MAIL_BODY, $modx->getChunk('errorBitrix'));
+/*Отправляем*/
+$modx->mail->setHTML(true);
+if (!$modx->mail->send()) {
+    $modx->log(modX::LOG_LEVEL_ERROR,'An error occurred while trying to send the email: '.$modx->mail->mailer->ErrorInfo);
+}$modx->mail->reset();}

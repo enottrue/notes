@@ -24,11 +24,11 @@ $queryData = http_build_query(array(
 	"SOURCE_ID" => $hook->formit->config['formName'], 
 	"LAST_NAME" => '',
 	"WEB" => array(array("VALUE" => 'site-protect.ru', "VALUE_TYPE" => "WORK" )),
-    "UTM_SOURCE" => $hook->getValue('utm_source'),
-    "UTM_MEDIUM" => $hook->getValue('utm_medium'),
-    "UTM_CAMPAIGN" => $hook->getValue('utm_campaign'),
-    "UTM_CONTENT" => $hook->getValue('utm_content'),
-    "UTM_TERM" => $hook->getValue('utm_term'),
+	"UTM_SOURCE" => $hook->getValue('utm_source'),
+	"UTM_MEDIUM" => $hook->getValue('utm_medium'),
+	"UTM_CAMPAIGN" => $hook->getValue('utm_campaign'),
+	"UTM_CONTENT" => $hook->getValue('utm_content'),
+	"UTM_TERM" => $hook->getValue('utm_term'),
 	"STATUS_ID" => "NEW",
 	"OPENED" => "Y",
 	"ASSIGNED_BY_ID" => $manager,
@@ -50,7 +50,6 @@ curl_setopt_array($curl, array(
 $result = curl_exec($curl);
 curl_close($curl);
 $result = json_decode($result, 1);
-
 if (array_key_exists('error', $result)) {
 echo "Error saving lead: ".$result['error_description']."<br/>";
 /*Активируем почтовый сервис MODX*/

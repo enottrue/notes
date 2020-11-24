@@ -1,0 +1,5 @@
+SELECT modx_payandsee_subscriptions.id, modx_payandsee_subscriptions.client, modx_payandsee_subscriptions.status, modx_payandsee_subscriptions.startdate, modx_user_attributes.email, modx_user_attributes.id
+FROM modx_user_attributes LEFT JOIN modx_payandsee_subscriptions ON modx_user_attributes.id = modx_payandsee_subscriptions.client
+WHERE (((modx_payandsee_subscriptions.status)=2));
+
+выборка активных подписок

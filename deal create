@@ -11,9 +11,9 @@ switch ($modx->event->name) {
             'user_profile' => $msOrder->UserProfile->toArray(),
         );
         
-       $modx->log(1,'data - '.print_r($data,1),'HTML');
+      // $modx->log(1,'data - '.print_r($data,1),'HTML');
 
-
+        $userBitrix = $modx->getOption('userBitrix',null,false);
 
         //$receiver_name = explode(' ', $data['address']['receiver']);
         $queryUrl = $modx->getOption('webHookUrl',null,false).'crm.deal.add.json'; //ссылка на вебхук - созданине сделки

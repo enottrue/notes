@@ -1,0 +1,84 @@
+<?php
+$page_id = $resource->get('id');
+$page_parent = $resource->get('parent');
+if($page_parent != 2124){return;}
+if($id === 2226){return;}
+
+$page_tv = $resource->get('tv57');//TV c id 81 в данном случае берется таким образом
+
+
+
+if ($product = $modx->getObject('msProduct', $page_id)) {
+    $price = $product->get('price'); //цена товара
+    $thumb = $product->get('image'); //изображение товара 
+}
+
+
+if ($page_tv) { //если у товара есть id битрикс обновляем товар
+$modx->log(1, 'Есть тв'.$price);
+$queryUrl = $modx->getOption('webHookUrl',null,false).'crm.product.update.json'; //ссылка на вебхук - созданине товара
+$queryData = http_build_query(array(
+ 'id'=> $page_tv,
+ 'fields' => array(
+ "NAME" => $resource->get('pagetitle'),
+ "PRICE" => $price,
+ "SORT" => 500,
+ "CATALOG_ID"=>24,
+ "SECTION_ID"=>507,
+ "PREVIEW_PICTURE" => array('fileData'=>array('https://tdentalgu.ru/'.$thumb, base64_encode(file_get_contents('https://tdentalgu.ru/'.$thumb)))),
+ "CURRENCY_ID" => 'RUB',
+ ),
+ 'params' => array("REGISTER_SONET_EVENT" => "Y")
+ ));
+ $curl = curl_init();
+  curl_setopt_array($curl, array(
+  CURLOPT_SSL_VERIFYPEER => 0,
+  CURLOPT_POST => 1,
+  CURLOPT_HEADER => 0,
+  CURLOPT_RETURNTRANSFER => 1,
+  CURLOPT_URL => $queryUrl,
+  CURLOPT_POSTFIELDS => $queryData,
+));
+$result = curl_exec($curl);
+//echo $result;
+curl_close($curl);
+//echo $result = json_decode($result, 1);  
+$modx->log(1,'update item - '.$page_id.'('.$page_tv.')'.$result);
+
+}
+
+else
+{
+$queryUrl = $modx->getOption('webHookUrl',null,false).'crm.product.add.json'; //ссылка на вебхук - созданине товара
+
+$queryData = http_build_query(array(
+ 'fields' => array(
+ "NAME" => $resource->get('pagetitle'),
+ "PRICE" => $price,
+ "SORT" => 500,
+ "CATALOG_ID"=>24,
+ "SECTION_ID"=>507,
+ "PREVIEW_PICTURE" => array('fileData'=>array('https://tdentalgu.ru/'.$thumb, base64_encode(file_get_contents('https://tdentalgu.ru/'.$thumb)))),
+ "CURRENCY_ID" => 'RUB',
+ ),
+ 'params' => array("REGISTER_SONET_EVENT" => "Y")
+ ));
+ $curl = curl_init();
+curl_setopt_array($curl, array(
+  CURLOPT_SSL_VERIFYPEER => 0,
+  CURLOPT_POST => 1,
+  CURLOPT_HEADER => 0,
+  CURLOPT_RETURNTRANSFER => 1,
+  CURLOPT_URL => $queryUrl,
+  CURLOPT_POSTFIELDS => $queryData,
+));
+$result = curl_exec($curl);
+//echo $result;
+curl_close($curl);
+$resultjson = json_decode($result, 1);    
+//    var_dump($result["result"]);
+
+$resource->setTVValue('b24ItemId', $resultjson["result"]);
+    $modx->log(1,'add item - '.$page_id.'('.$resultjson["result"].')'.$result);
+}
+return;

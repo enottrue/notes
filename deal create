@@ -1,0 +1,115 @@
+<?php
+//модуль создания сделки в битрикс 24 из заказа
+switch ($modx->event->name) {
+    case 'msOnCreateOrder':
+            $data = array(
+            'order' => $msOrder->toArray(),
+            'delivery' => $msOrder->Delivery->toArray(),
+            'payment' => $msOrder->Payment->toArray(),
+            'address' => $msOrder->Address->toArray(),
+            'user' => $msOrder->User->toArray(),
+            'user_profile' => $msOrder->UserProfile->toArray(),
+        );
+        
+       $modx->log(1,'data - '.print_r($data,1),'HTML');
+
+
+
+        //$receiver_name = explode(' ', $data['address']['receiver']);
+        $queryUrl = $modx->getOption('webHookUrl',null,false).'crm.deal.add.json'; //ссылка на вебхук - созданине сделки
+     //   echo $queryUrl;
+        
+
+        $queryData = http_build_query(array(
+         'fields' => array(
+         "TITLE" => 'Заказ рекламных материалов tdentalgu.ru. Заказ '. $data['order']['num'],
+         "COMPANY_ID" => $extended['firmid']?: 'имя не задано',
+         "COMMENTS" => '<h4>Данные дилера при заполнении формы заказа</h4>'.
+         'Дилер: '.$data['address']['receiver'].'<br>'.
+         'Телефон: '.$data['address']['phone'].'<br>'.
+         'Почта: '.$data['address']['email'].'<br>'.
+         'Индекс: '.$data['address']['index'].'<br>'.
+         'Область: '.$data['address']['region'].'<br>'.
+         'Город: '.$data['address']['city'].'<br>'.
+         'Улица: '.$data['address']['street'].'<br>'.
+         'Дом: '.$data['address']['building'].'<br>'.
+         'Квартира: '.$data['address']['room'].'<br>'.
+         'Способ доставки: '.$data['delivery']['name'].'<br>'.
+         'Тип оплаты: '.$data['delivery']['name'].'<br>'.
+         'Комментрарий: '.$data['address']['comment'].'<br>',
+         "STATUS_ID" => "NEW",
+         "OPENED" => "Y",
+         "ASSIGNED_BY_ID" => 15949,
+         "PHONE" => array(array("VALUE" => $data['address']['phone'], "VALUE_TYPE" => "WORK" )),
+         "EMAIL" => array(array("VALUE" => $data['address']['email'], "VALUE_TYPE" => "WORK" )),
+         ),
+         'params' => array("REGISTER_SONET_EVENT" => "Y")
+         ));
+ 
+          $curl = curl_init();
+          curl_setopt_array($curl, array(
+          CURLOPT_SSL_VERIFYPEER => 0,
+          CURLOPT_POST => 1,
+          CURLOPT_HEADER => 0,
+          CURLOPT_RETURNTRANSFER => 1,
+          CURLOPT_URL => $queryUrl,
+          CURLOPT_POSTFIELDS => $queryData,
+        ));
+        
+        $result = curl_exec($curl);
+        //echo $result;
+        curl_close($curl);
+        $jsondecode = json_decode($result, 1);
+        $dealId=$jsondecode[result];
+        $orderId=$data['order']['id'];
+        //echo '</br>'.$result["result"];
+        
+        $modx->log(1,'Добавлен заказ - '.print_r($orderId, 1),'HTML');
+        // $modx->log(1,'Добавлена сделка - '.print_r($jsondecode[result],1),'HTML');
+        $modx->log(1,'Добавлена сделка номер - '.$dealId,'HTML');
+        // addProducts($dealId,$orderId,$order);
+        // function addProducts($dealId,$orderId,$order) 
+        // {
+        
+            if ($order = $modx->getObject('msOrder', $orderId)) {
+        	$products = $order->getMany('Products');
+         	foreach ($products as $product) {
+                 $productid = $product->get('product_id'); 
+         	     $productprice = $product->get('price'); 
+         	     $productcount = $product->get('count'); 
+        
+                $tvValue = $modx->getObject('modTemplateVarResource', array(
+                    'tmplvarid' => 57,
+                    'contentid' => $productid,
+                ));
+
+                $b2prouctid = $tvValue->get('value');
+                $arrayProducts[] = array('PRODUCT_ID'=>$b2prouctid, "PRICE" => $productprice, "QUANTITY" => $productcount);
+                }
+                
+                $queryUrl = $modx->getOption('webHookUrl',null,false).'crm.deal.productrows.set.json'; //ссылка на вебхук - созданине сделки
+                $queryData = http_build_query(array(
+                'id'=>$dealId,//ид-сделки
+                'rows' => $arrayProducts,
+                'params' => array("REGISTER_SONET_EVENT" => "Y")
+                ));
+                }
+                 $curl = curl_init();
+                 curl_setopt_array($curl, array(
+                 CURLOPT_SSL_VERIFYPEER => 0,
+                 CURLOPT_POST => 1,
+                 CURLOPT_HEADER => 0,
+                 CURLOPT_RETURNTRANSFER => 1,
+                 CURLOPT_URL => $queryUrl,
+                 CURLOPT_POSTFIELDS => $queryData,
+              ));
+               
+                $result = curl_exec($curl);
+                echo $result;
+                curl_close($curl);
+                $resultjson = json_decode($result, 1);
+                $modx->log(1,'Добавлены товары в сделку - '.print_r($resultjson,1),'HTML');
+                return;
+        
+                break;
+}

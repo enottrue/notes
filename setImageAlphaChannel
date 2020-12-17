@@ -1,0 +1,115 @@
+<?php
+//$modx->log(MODX_LOG_LEVEL_ERROR, print_r($resource->toArray(),true) ); //Выводит в error массив полей ресурсов
+/*Работа любого плагинов в MODX весьма своеобразна, а имеено: данные return выводятся в error log (там образом можно отлаживать). Он же используется для прерывания кода как exite. Таким
+образом лучше его ставить в конце скрипта*/
+/*Не все события имеют доступ к полям ресурсов. Пробовал повесить плагин на одно из событий upload, не получается затем использовать поля ресурсов. В данном случае я использую событие
+OnDocFormSave. Существует настоятельная необходимость полного изучения документации по системным событиям, он часто отличаются своими классами методами и логикой
+
+/*Используемые переменные*/
+//$prefix = $modx->resource->get('id');
+
+$page_id = $resource->get('id');
+$page_template = $resource->get('template');
+if($page_template != 29){return;}//Привязка к шаблону. Иначе будет выполняться везде
+
+$page_tv34 = $resource->get('tv34');//TV в данном случае берется таким образом
+
+
+//   $tvValue = $modx->getObject('modTemplateVarResource', array(
+//                     'tmplvarid' => 34,
+//                     'contentid' => $page_id,
+//                 ));
+
+//                 $page_tv34 = $tvValue->get('value');
+       if($page_tv34 == ''){return;}
+         
+                
+                
+$num_of_slid_page = '0';
+$assets_path = $modx->config['assets_path'];//Здесь идет полный путь от названия жесткого диска
+$base_path = $modx->config['base_path'];
+
+// $page = $modx->getObject('modResource', $page_id);
+// $page_tv34 = $page->getTVValue('CataloPDF');
+
+
+$new_dir = $assets_path.'tmpSlid/files/mobile/'.$page_id;
+// //return 'Здесь id:'.$page_id.'<br>Здесь template:'.$page_template.'<br>Здесь tv34:'.$page_tv34.'<br>Здесь page_tvbrowser34:'.$page_tvbrowser3;
+// /*Функции*/
+// /*Функция для удаления директорий с файлами и другими директориями*/
+function delTree($dir) { 
+  $files = array_diff(scandir($dir), array('.','..')); 
+    foreach ($files as $file) { 
+      (is_dir("$dir/$file")) ? delTree("$dir/$file") : unlink("$dir/$file"); 
+    } 
+    return rmdir($dir); 
+  } 
+
+
+if(is_dir($new_dir)){
+    delTree($new_dir);
+}
+    mkdir($new_dir);
+    mkdir($new_dir.DIRECTORY_SEPARATOR.'sm');
+
+$im = new Imagick();
+$im->setCompression(Imagick::COMPRESSION_JPEG); #Устанавливаем компрессор
+$im->setCompressionQuality(100); #И уровень сжатия
+$im->setResolution(150,150);//Вывел сюда качество улучшилось
+$im->readImage($base_path.$page_tv34);
+
+
+$height = $im->getImageWidth();
+$width = $im->getImageHeight();
+
+// // //$pages=1; //Ранее использовал для подсчета количества переменню $i. Однако из-за длительности работы скрипта данная схема не срабатывала. 
+// // //Поэтому подсчет ведется изначально и данные передаются в базу данных заранее
+
+$i=0;
+foreach($im as $_img) {//Невозможно обрабатывать изображения сразу с цикла, Пришлось создавать новый объект
+$i++;
+//в зависимости от высоты и ширины разные размеры превью   
+if($width>$height){
+    
+$im->writeImage($new_dir.DIRECTORY_SEPARATOR.$i.'.jpg'); 
+$im->adaptiveResizeImage(260,380);
+// сохранить изображение
+//$im->setImageBackgroundColor('white');
+//$im->rotateImage(new ImagickPixel(), 1);
+
+
+  // Remove alpha channel
+    $im->setImageAlphaChannel(11);
+
+    // Set image background color
+    $im->setImageBackgroundColor('white');
+
+    // Merge layers
+   // $im->mergeImageLayers(imagick::LAYERMETHOD_FLATTEN);
+
+//$im->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+//$im->setImageBackgroundColor('#FFFFFF');
+//$im = $im->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+
+
+// $im->setImageBackgroundColor('white');
+
+// $im->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+
+
+$im->writeImage($new_dir.DIRECTORY_SEPARATOR.'sm'.DIRECTORY_SEPARATOR.$i.'.jpg');
+$resource->setTVValue('catalogWidthSize', 1324);
+$resource->setTVValue('catalogHeightSize', 1874);
+  		}else{
+$im->writeImage($new_dir.DIRECTORY_SEPARATOR.$i.'.jpg'); 
+$im->adaptiveResizeImage(380,260);
+// сохранить изображение
+$resource->setTVValue('catalogWidthSize', 1874);
+$resource->setTVValue('catalogHeightSize', 1324);
+
+$im->writeImage($new_dir.DIRECTORY_SEPARATOR.'sm'.DIRECTORY_SEPARATOR.$i.'.jpg');
+}
+}
+$im->clear();
+$im->destroy();
+$resource->setTVValue('catalogPageNumber', $i);

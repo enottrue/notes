@@ -6,7 +6,7 @@
 
 
 if(isset($_FILES['file']) and !empty($_FILES['file'])){
-    $file_path = 'https://www.site-protect.ru/files/' . $modx->runSnippet('vi_file_upload',array('file' => $_FILES['file']));
+    $file_path = 'https://www.noteup.ru/files/' . $modx->runSnippet('vi_file_upload',array('file' => $_FILES['file']));
 } else {
     $file_path = '';
 }

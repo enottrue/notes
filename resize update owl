@@ -1,0 +1,27 @@
+// find element
+$owl = $('body').find('.sales__wrapper.owl-carousel');
+// set the owl-carousel otions
+var carousel_Settings = {
+    items:3,
+    loop: true
+};
+function initialize(){
+  if ($(window).width() >= 992) {
+    // initialize owl-carousel if window screensize is less the 767px
+    $owl.owlCarousel( carousel_Settings );
+    target.find(".owl-carousel").trigger("refresh.owl.carousel");
+  } else {
+    // destroy owl-carousel and remove all depending classes if window screensize is bigger then 767px
+    $owl.trigger('destroy.owl.carousel').removeClass('owl-loaded');
+    $owl.find('.owl-stage-outer').children().unwrap();
+    $owl.find('.owl-thumbs').remove();
+  }
+}
+// initilize after window resize
+var id;
+$(window).resize( function() {
+  clearTimeout(id);
+  id = setTimeout(initialize, 500);
+});
+// initilize onload
+initialize();

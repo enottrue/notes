@@ -1,0 +1,3 @@
+changeSet.hasChangedField("integration_delivery_data.track_number") and order.customField("codepocupki") != null and order.getDeliveryType().getCode() == 'iml' and order.customField("source_of_order") == "Market-DBS"
+
+смена статуса

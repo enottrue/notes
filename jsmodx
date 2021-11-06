@@ -1,0 +1,189 @@
+function onMessage(html) {
+    M.toast({html})
+}
+
+function onModal(string="") {
+    $('form[name="callback"]').find('[name="service"]').val(string);
+    $('#modal-callback').modal('open');
+}
+function onModal1(n=0) {
+   
+    ('#modal-doctor-'+n).modal('open');
+}
+
+
+function scrollTracking(selector){
+    
+	var wt = $(window).scrollTop();
+
+	var wh = $(window).height();
+
+	var et = $(selector).offset().top;
+
+	var eh = $(selector).outerHeight();
+
+ 
+
+	if (wt + wh >= et && wt + wh - eh * 2 <= et + (wh - eh)){
+		return true;
+	} else {
+        return false;
+	}
+
+}
+
+
+function getParameterByName(name, url = window.location.href) {
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+    $(window).resize(function() {
+        if ($(window).width() < 769) {
+              console.log('mob' + $(window).width() );
+                $('.top-block').height($(window).width() - 200);
+                $( ".top-block" ).each(function(){
+                    slyde=$(this);
+                    picta= $(this).data("mbck");
+                    slyde.css({"background" : "url("+picta+")"});
+                });
+            }else{
+         
+                $('.top-block').height($(window).height()*0.25);
+                $( ".top-block" ).each(function(){
+                    slyde=$(this);
+                    picta1= $(this).data("bck"); 
+                    console.log('dt ' +  + $(window).width()  + ' '+ $(window).height());
+                    slyde.css({"background" : "url("+picta1+")"});
+                });
+            }
+    
+    });
+    
+$(document).ready(function () {
+    if (getParameterByName('block')) {
+        var element = document.querySelector('[data-id="'+getParameterByName('block')+'"]');
+        
+        if (element && !scrollTracking('[data-id="'+getParameterByName('block')+'"]')) {
+           window.scrollTo(element.offsetLeft, element.offsetTop - 50);
+            console.log(element.offsetTop);
+            // element.scrollIntoView({
+            //     behavior: "auto",
+            //     block: "center"
+                
+            // });
+        }
+    }
+    
+  if ($(window).width() < 769) {
+                $('.top-block').height($(window).width()-200);
+                $( ".top-block" ).each(function(){
+                    slyde=$(this);
+                    picta= $(this).data("mbck");
+                    slyde.css({"background" : "url("+picta+")"});
+                });
+            }else{
+                $('.top-block').height($(window).height()*0.25);
+                $( ".top-block" ).each(function(){
+                    slyde=$(this);
+                    picta= $(this).data("bck");
+                    slyde.css({"background" : "url("+picta+")"});
+                });
+            }
+    
+    
+    $('.modal').modal();
+    $('.tooltipped').tooltip();
+    
+    $('.question-item').on('click', function () {
+        $(this).find('.question-answer').slideToggle();
+        $(this).toggleClass('active')
+    })
+   
+    $('form').on('submit', function($event) {
+        $event.preventDefault();
+        
+        
+        
+        $(this).find('input[required]').each(function() {
+            if ($(this).length === 0) {
+                onMessage('Заполните все поля');
+                return;
+            }
+        })
+    
+        const form = this;     
+        $.ajax({
+            url: "api/tlgram/send",
+            type: "POST",
+            data: {
+    			data: {
+    			    "service": $(this).find("[name='service']").val(),
+    			    "name": $(this).find("[name='name']").val(), 
+    			    "phone": $(this).find("[name='phone']").val(),
+    			}
+            },
+            success: function() {
+                $(form).trigger('reset');
+                onMessage('Ваш запрос успешно принят! В ближайшее время с Вами свяжется наш менеджер');
+                ym(74009869,'reachGoal','zaiavka-land');
+                $('#modal-callback').modal('close');
+            },
+            error: function() {
+                onMessage('Ошибка сервера, повторите попытку позже')
+            }
+        });
+    })
+    
+    
+    if (!coord_center) {
+        var coord_center = '55.709292, 37.768734';
+    }
+    
+    coord_center = coord_center.split(',');
+    
+  ymaps.ready(init);
+
+  var myMap;
+    
+  $( window ).resize(function() {
+    myMap.destroy();  
+    ymaps.ready(init);
+  });
+  
+  function init() {
+    myMap = new ymaps.Map("map", {
+      center: coord_center,
+      zoom: 17,
+    }, {
+      searchControlProvider: 'yandex#search'
+    });
+
+    myMap.behaviors.disable('scrollZoom'); 
+    myMap.behaviors.disable('drag');
+
+    myMap.controls.remove("mapTools")
+    .remove("typeSelector")
+    .remove("searchControl")
+    .remove("trafficControl")
+    .remove("miniMap")
+    .remove("scaleLine")
+    .remove("routeEditor")
+    .remove("zoomControl")
+    .remove("geolocationControl")
+    .remove("fullscreenControl")
+    .remove("smallZoomControl");
+
+    myMap.geoObjects
+      .add(new ymaps.Placemark([coord_center[0], coord_center[1] - 0.004], {
+        iconCaption: 'SimpleHealth'
+      }, {
+        preset: 'islands#Icon',
+        iconCaptionMaxWidth: '200'
+      }));
+  }
+})

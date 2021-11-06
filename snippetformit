@@ -1,0 +1,142 @@
+<?php
+header('Content-Type: application/json');
+/*
+
+
+if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] != 'XMLHttpRequest') {
+    header('HTTP/1.1 500 Internal Server Error');
+    die($modx->toJson(array(
+        "message" => "Internal Server Error"
+    )));
+}
+*/
+
+
+if (empty($_POST)) {
+    header('HTTP/1.1 405 Method Not Allowed');
+    die($modx->toJson(array(
+        "message" => "Method Not Allowed"
+    )));
+}
+
+
+$data = $_POST['data'];
+
+$subject = "О/з: " .$data['name']. ' - '.$data['phone'];
+$mail_body = '<h3>Запрос обратного звонка с сайта simplehealth.clinic</h3>';
+
+if (!empty($data['service_or_doctor'])) {
+    $subject = 'Запись: '.$data['service_or_doctor'];
+    $mail_body = 'Запись: '.$data['service_or_doctor'];
+}
+
+$mail_body .= '<br>';
+
+if (!empty($data['name'])) {
+    $mail_body .= '<p><b>Имя:</b> '.$data['name'].'</p>';
+}
+
+if (!empty($data['phone'])) {
+    $mail_body .= '<p><b>Телефон:</b> '.$data['phone'].'</p>';
+}
+
+if (!empty($data['page'])) {
+    $mail_body .= '<p><b>Страница:</b> '.$data['page'].'</p>';
+}
+
+
+$modx->getService('mail', 'mail.modPHPMailer');
+$modx->mail->set(modMail::MAIL_BODY, $mail_body);
+$modx->mail->set(modMail::MAIL_FROM, 'routine@simplehealth.clinic');
+$modx->mail->set(modMail::MAIL_FROM_NAME, 'Уведомление SimpleHealth');
+$modx->mail->set(modMail::MAIL_SENDER, 'routine@simplehealth.clinic');
+$modx->mail->set(modMail::MAIL_SUBJECT, $subject);
+$modx->mail->address('to', 'enottrue@gmail.com');
+$modx->mail->address('to', 'info@sh-clinic.ru');
+$modx->mail->address('to','hristo-2006@yandex.ru');
+$modx->mail->address('to','enjseo@yandex.ru');
+$modx->mail->setHTML(true);
+
+$sent = $modx->mail->send();
+if ($sent) {
+    header('HTTP/1.1 200 OK');
+    die($modx->toJson(array(
+        "message" => "Mail Sent"
+    )));
+} else {
+    header('HTTP/1.1 500 Internal Server Error');
+    die($modx->toJson(array(
+        "message" => "Internal Server Error"
+    )));
+}
+
+print_r($_POST);
+// $tlgram = [
+// 	'unique_id' => '77bc586c-2d65-4c81-a183-fde358fd127e',
+// 	'template_id' => $_POST['template_id'],
+// 	'data' => $_POST['data']
+// ];
+
+/*
+0 - 
+1 - callback
+2 - doctor
+*/
+
+
+// $tlgram = json_encode($tlgram, JSON_UNESCAPED_UNICODE);
+
+
+// $m_ar = json_decode($tlgram, true);
+// print_r($m_ar);
+
+
+// echo '<br><br>'.$tlgram;
+
+// /* получатели */
+// $to= "thejoker.msk@icloud.com <thejoker.msk@icloud.com>" . ", " ; //обратите внимание на запятую
+
+
+// //$to .= "hristo-2006@yandex.ru <hristo-2006@yandex.ru>";
+
+// /* тема/subject */
+// $subject = "Запись  с сайта";
+
+// /* сообщение */
+
+// /*(
+//     [unique_id] => 77bc586c-2d65-4c81-a183-fde358fd127e
+//     [template_id] => 1
+//     [data] => Array
+//         (
+//             [theme] => 1
+//             [name] => ке3е
+//             [phone] => +7 (926) 565-3720
+//             [page] => Лечение в дневном стационаре
+//         )
+
+// )*/
+// $message='';
+// if (empty($m_ar['data']['service_or_doctor'])){
+//     $subject = 'О/з '.$m_ar['data']['phone'].',  '.$m_ar['data']['name'];
+//     $message .= '<p><b>Запрос обратного звонка с сайта simplehealth.clinic</b></p>';
+// }else{
+//      $subject = 'Запись :  '.$m_ar['data']['service_or_doctor'];
+//          $message .= '<p><b>Запись :  '.$m_ar['data']['service_or_doctor'].'</b></p>';
+// }
+
+
+
+// if(!empty ($m_ar['data']['phone'])){         $message .= '<p><b>Телефон:</b>  '.$m_ar['data']['phone'].'</p>';}
+// if(!empty ($m_ar['data']['name'])){         $message .= '<p><b>Имя:</b>  '.$m_ar['data']['name'].'</p>';}
+// if(!empty ($m_ar['data']['page'])){         $message .= '<p><b>Страница:</b>  '.$m_ar['data']['page'].'</p>';}
+// /* Для отправки HTML-почты вы можете установить шапку Content-type. */
+// $headers= "MIME-Version: 1.0\r\n";
+// $headers .= "Content-type: text/html; charset=utf-8\r\n";
+
+// /* дополнительные шапки */
+// $headers .= "From: Запись с сайта <routine@simplehealth.clinic>\r\n";
+
+
+/* и теперь отправим из */
+// mail($to, $subject, $message, $headers);

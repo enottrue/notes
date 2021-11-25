@@ -1,0 +1,24 @@
+CModule::IncludeModule("iblock");
+CModule::IncludeModule("file");
+
+$ID = 7;//id инфоблока
+
+
+$arFilter = Array("IBLOCK_ID"=>$ID);
+$rsEl = CIBlockElement::GetList(Array(), $arFilter);
+while($arEl = $rsEl->GetNext()){ 
+   $el = new CIBlockElement;
+        $arFields = Array();
+   if($arEl["DETAIL_PICTURE"]){
+	var_dump($arEl["ID"]);
+$resize_image = CFile::ResizeImageGet($arEl["DETAIL_PICTURE"],
+Array("width" => 300, "height" => 300),
+BX_RESIZE_IMAGE_EXACT, false);
+
+echo CFile::MakeFileArray($_SERVER["DOCUMENT_ROOT"] . CFile::GetFileArray($resize_image["src"]));
+$arFields['PREVIEW_PICTURE'] =  CFile::MakeFileArray($resize_image["src"]);
+$arFields['PREVIEW_PICTURE']["del"] = "Y";
+$el->Update($arEl["ID"], $arFields); 
+   }
+
+}
